@@ -1,0 +1,8 @@
+[submodule "fuel-web.git"]
+	path = fuel-web.git
+	url = https://github.com/ymkins/fuel-web
+	multipath = multipath
+[submodule "fuel-main.git"]
+	path = fuel-main.git
+	url = https://github.com/ymkins/fuel-main
+	multipath = multipath
