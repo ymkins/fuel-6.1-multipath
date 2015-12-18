@@ -1,0 +1,34 @@
+#!/bin/sh -e
+
+mount -t devpts devpts /dev/pts
+
+fix-configs-on-startup || true
+flock -w 0 -o /var/lock/agent.lock -c "/opt/nailgun/bin/agent >> /var/log/nailgun-agent.log 2>&1" || true
+
+touch /var/lock/subsys/local
+
+
+# multipath discovery
+
+dev_agent_log="/var/log/dev-agent.log"
+cmds=(
+    "/opt/nailgun/bin/lsblk.rb"
+    "ls -alFR /dev/disk/ /dev/mapper/"
+    "chkconfig --list multipathd"
+    "service multipathd status"
+    "cat /etc/multipath/bindings"
+    "multipath -ll -v3"
+    "ls /dev/sd*"
+)
+
+for d in $( ls /dev/sd* )
+do
+    cmds+=("udevadm info -a -n $d")
+done
+
+for cmd in "${cmds[@]}"
+do
+    printf "\n#\n# %s\n" "$cmd"  >> "$dev_agent_log"
+    eval "$cmd"  >> "$dev_agent_log"  2>&1 || true
+done
+
