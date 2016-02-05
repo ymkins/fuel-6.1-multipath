@@ -2,6 +2,8 @@
 
 This repo contains materials for feature __Support multipath devices in Fuel__.
 
+The current implementation supports the Fibre Channel Multipathing.
+
 Follow to http://stackoverflow.com/questions/1777854/git-submodules-specify-a-branch-tag/18799234#18799234
 and update submodules for actual code.
 
@@ -11,32 +13,43 @@ Upstream https://github.com/openstack/fuel-web after 6.1 release separates agent
   - https://github.com/openstack/fuel-agent
   - https://github.com/openstack/fuel-nailgun-agent
 
+When porting this feature pay attention on multipath names and separator especially in different distro.
+http://initrd.org/wiki/Device_Mapper_Multipath#Multipath_Names
+
 
 ## Known issues
 
-* The multipath service fails on Ubuntu
+* The multipath fails with lvm on Ubuntu.
+There are few issues on launchpad that describes such troubles:
+    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1467989
+    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1480399
+    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1526984
+    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1538775
+
+So, check the status on https://bugs.launchpad.net/ubuntu/+source/multipath-tools
+
 
 ## Custom Fuel iso
 
 * Create the build env https://docs.fuel-infra.org/fuel-dev/buildsystem.html
-* Checkout the __multipath__ branch of https://github.com/ymkins/fuel-web
+* Checkout the __multipath__ branch of https://github.com/ymkins/fuel-main
 * Run simple http server for extra RPM-repo
 * Run __make iso__ with options NAILGUN_REPO, NAILGUN_COMMIT, EXTRA_RPM_REPOS
 ```
-cd /root/fuel-multipath/fuel-main.git
+cd ./fuel-multipath/fuel-main.git
 mkdir -p ../extra_rpm/centos/6/os/x86_64/Packages
 cd ../extra_rpm/centos/6/os/x86_64/Packages/
 wget http://mirror.centos.org/centos/6/os/x86_64/Packages/device-mapper-multipath-0.4.9-87.el6.x86_64.rpm
 wget http://mirror.centos.org/centos/6/os/x86_64/Packages/device-mapper-multipath-libs-0.4.9-87.el6.x86_64.rpm
 wget http://mirror.centos.org/centos/6/os/x86_64/Packages/kpartx-0.4.9-87.el6.x86_64.rpm
 cd ../../../../../
-createrepo ./centos/6/os/x86_64/
+createrepo -p --no-database --simple-md-filenames ./centos/6/os/x86_64/
 ```
 
 ```
-cd /root/fuel-multipath/extra_rpm/
+cd ./fuel-multipath/extra_rpm/
 python ../fuel-main.git/utils/simple_http_daemon.py
-cd /root/fuel-multipath/fuel-main.git
+cd ./fuel-multipath/fuel-main.git
 make iso ISO_NAME='fuel-6.1-multipath' NAILGUN_REPO='https://github.com/ymkins/fuel-web.git' NAILGUN_COMMIT='multipath' EXTRA_RPM_REPOS='m,http://127.0.0.1:9001/centos/6/os/x86_64/' 2>&1 | tee ../make_iso.log
 kill `cat /var/run/simplehttpd.pid`
 ```
