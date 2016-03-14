@@ -3,9 +3,11 @@
 This repo contains materials for feature __Support multipath devices in Fuel__.
 
 The current implementation supports the Fibre Channel Multipathing.
+Both target OS are supported for node deployment: CentOS and Ubuntu.
 
-Follow to http://stackoverflow.com/questions/1777854/git-submodules-specify-a-branch-tag/18799234#18799234
-and update submodules for actual code.
+Follow and update submodules for actual code:
+http://stackoverflow.com/questions/1777854/git-submodules-specify-a-branch-tag/18799234#18799234
+
 
 ## Notes
 
@@ -13,20 +15,17 @@ Upstream https://github.com/openstack/fuel-web after 6.1 release separates agent
   - https://github.com/openstack/fuel-agent
   - https://github.com/openstack/fuel-nailgun-agent
 
-When porting this feature pay attention on multipath names and separator especially in different distro.
+When porting this feature pay attention on multipath names and separator especially in different distro:
 http://initrd.org/wiki/Device_Mapper_Multipath#Multipath_Names
+
+This feature is planned for the upstream Fuel-9.0:
+https://review.openstack.org/#/c/276745/
 
 
 ## Known issues
 
-* The multipath fails with lvm on Ubuntu.
-There are few issues on launchpad that describes such troubles:
-    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1467989
-    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1480399
-    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1526984
-    * https://bugs.launchpad.net/ubuntu/+source/multipath-tools/+bug/1538775
-
-So, check the status on https://bugs.launchpad.net/ubuntu/+source/multipath-tools
+Finally it works on Ubuntu. At least with multipath-tools since 0.4.9-3ubuntu7.9.
+In case of trouble, check the https://bugs.launchpad.net/ubuntu/+source/multipath-tools
 
 
 ## Custom Fuel iso
@@ -35,6 +34,7 @@ So, check the status on https://bugs.launchpad.net/ubuntu/+source/multipath-tool
 * Checkout the __multipath__ branch of https://github.com/ymkins/fuel-main
 * Run simple http server for extra RPM-repo
 * Run __make iso__ with options NAILGUN_REPO, NAILGUN_COMMIT, EXTRA_RPM_REPOS
+
 ```
 cd ./fuel-multipath/fuel-main.git
 mkdir -p ../extra_rpm/centos/6/os/x86_64/Packages
@@ -57,6 +57,7 @@ kill `cat /var/run/simplehttpd.pid`
 _Note: There are build issue on Ubuntu-12.04._
 
 The __xorriso__ supports -isohybrid-gpt-basdat option since xorriso-1.2.4, but Ubuntu-12.04 has xorriso-1.1.8.
+
 ```
 xorriso -as mkisofs \
 		-V "OpenStack_Fuel" -p "Fuel team" \
@@ -80,6 +81,7 @@ make: *** [/root/rocket-multipath/fuel-main.git/build/artifacts/fuel-6.1-multipa
 ```
 
 So, after xorriso fails, re-run it without -isohybrid-gpt-basdat option:
+
 ```
 xorriso -as mkisofs \
 		-V "OpenStack_Fuel" -p "Fuel team" \
@@ -96,10 +98,15 @@ xorriso -as mkisofs \
 ## Work-flow with the KVM-based environment
 
 #### RTFM
+
 * https://github.com/openstack/fuel-devops
 * https://docs.fuel-infra.org/fuel-dev/devops.html
 
+There is the special edition with multipath emulation support:
+https://review.openstack.org/#/c/286804/
+
 #### Setup the __fuel-devops__ virtualenv
+
 ```
 $ sudo apt-get install python-pip virtualenvwrapper
 $ mkvirtualenv fuel-devops
@@ -109,6 +116,7 @@ $ mkvirtualenv fuel-devops
 https://github.com/openstack/fuel-devops#installation
 
 *Note: You can use __sqlite__ instead of __postgres__. Just edit the __virtualenv postactivate__ script:*
+
 ```
 #!/bin/bash
 # This hook is run after every virtualenv is activated.
@@ -118,7 +126,7 @@ export DEVOPS_DB_NAME="${HOME}/.devops/fuel_devops.sqlite"
 ```
 
 #### Install the fuel-devops
-Try the modern version.
+Try the regular version.
 ```
 $ pip install git+https://github.com/openstack/fuel-devops.git@2.9.15 --upgrade
 ```
@@ -140,6 +148,7 @@ $ dos.py destroy m61;  dos.py snapshot m61 master
 * https://docs.mirantis.com/openstack/fuel/fuel-6.1/operations.html#accessing-the-shell-on-the-nodes
 * https://docs.mirantis.com/openstack/fuel/fuel-6.1/operations.html#troubleshooting-partial-mirror
 * https://bugs.launchpad.net/fuel/+bug/1528498/comments/8
+
 ```
 [root@nailgun ~]# echo 'multipath-tools-boot' >> /etc/fuel-createmirror/requirements-deb.txt
 [root@nailgun ~]# fuel-createmirror
@@ -162,8 +171,8 @@ $ dos.py destroy m61;  dos.py snapshot m61 c1
 ```
 
 #### Create and attach multipath devices to slave-03.
-
 Modern (since 1.2.8) __virsh__ has --serial option, use virt-manager UI if you have older version.
+
 ```
 $ qemu-img create -f qcow2 _160GB.qcow2 160G
 $ virsh vol-clone _160GB.qcow2 m61-scsi1 --pool default
@@ -226,4 +235,3 @@ $ dos.py destroy m61;  dos.py snapshot m61 c1_mpath_root
 ```
 $ dos.py destroy m61;  dos.py revert m61 master
 ```
-
